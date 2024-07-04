@@ -1,25 +1,40 @@
 
+// ignore_for_file: unused_import, avoid_print, prefer_const_constructors
 
-// ignore_for_file: unused_import
-
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:path/path.dart';
+import 'package:wiz/constants/routes.dart';
+import 'package:wiz/services/auth/auth_service.dart';
 import 'package:wiz/views/login_view.dart';
-import 'firebase_options.dart';
+import 'package:wiz/views/notes/main_view.dart';
+import 'package:wiz/views/notes/new_note_view.dart';
+import 'package:wiz/views/register_view.dart';
+import 'package:wiz/views/verify_emailview.dart';
+import 'dart:developer' as devtools show log;
+// ignore: depend_on_referenced_packages
+import 'package:hexcolor/hexcolor.dart';
 
 // import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MaterialApp(
-    
-      title: 'Flutter Demo',
+      title: 'Wiz Notes',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
         useMaterial3: true,
       ),
-      home: const Homepage(),
+      home: const LoginView(),
+      routes: {
+        loginRoute: (context) =>  LoginView(),
+        registerRoute: (context) => RegisterView(),
+        verifyRoute:(context) => VerifyEmailView(),
+         homeRoute:(context) =>  Homepage(),
+         mainViewRoute : (context) => NotesView(),
+         newNoteRoute:(context) => const NewNoteView()
+
+
+      },
     ),
     );
 }
@@ -31,43 +46,48 @@ class Homepage extends StatelessWidget {
 @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.greenAccent,
-        title: const Text(
-          'WasteWiz',
-          style: TextStyle(
-            fontSize: 30.0, // Font size of the title text
-            fontWeight: FontWeight.bold, // Font weight of the title text
-            color: Colors.black,
+        // appBar: AppBar(
+        //   backgroundColor: HexColor('#D2DE32'),
+        //   title: const Text(
+        //     'WasteWiz',
+        //     style: TextStyle(
+        //       fontSize: 30.0, // Font size of the title text
+        //       fontWeight: FontWeight.bold, // Font weight of the title text
+        //       color: Colors.black,
+        //     ),
+        //   ),
+        //   elevation: 10.0,
+        // ),
+        body: Center(
+          // child: Padding(
+          //   padding: const EdgeInsets.all(16.0),
+            child: FutureBuilder(
+        future: AuthService.firebase().initialize(),
+        builder: (context, snapshot) {
+      switch(snapshot.connectionState){
+        case ConnectionState.done:
+          if (snapshot.hasError) {
+            return Text("Error initializing Firebase: ${snapshot.error}");
+          }
+          final user = AuthService.firebase().currentUser;
+          if (user != null) {
+            if (user.isEmailVerified) {
+              // Return a welcome message with the user's email
+              return  const NotesView();
+            } else {
+              // If email is not verified, show the VerifyEmailView
+              return const VerifyEmailView();
+            }
+          } else {
+            // If no user is logged in, show the LoginView
+            return const LoginView();
+          }
+        default:
+          return const CircularProgressIndicator(); // Or any other loading indicator
+      }
+        },
+      )
           ),
-        ),
-        elevation: 10.0,
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: FutureBuilder(
-            future: Firebase.initializeApp(
-              options: DefaultFirebaseOptions.currentPlatform,
-            ),
-            builder: (context, snapshot) {
-             switch(snapshot.connectionState){
-              case ConnectionState.done:
-             final user =FirebaseAuth.instance.currentUser;
-             if(user?.emailVerified ?? false){
-              print("You are a verified user.");
-             } else{
-              print("You need  to verify your email address.");
-             }
-              return const Text ('Done');
-              default:
-               return const Text('Loading...');
-             }
-            },
-          ),
-        ),
-      ),
-    );
+        );
   }
 }
-

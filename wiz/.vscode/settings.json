@@ -1,5 +1,7 @@
 {
     "cSpell.words": [
+        "hexcolor",
         "vsync"
-    ]
+    ],
+    "java.configuration.updateBuildConfiguration": "interactive"
 }

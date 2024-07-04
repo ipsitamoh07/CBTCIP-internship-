@@ -1,7 +1,14 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
+
 import 'package:flutter/material.dart';
-import 'package:wiz/firebase_options.dart';
+import 'package:hexcolor/hexcolor.dart';
+import 'package:wiz/constants/routes.dart';
+import 'package:wiz/services/auth/auth_exception.dart';
+import 'package:wiz/services/auth/auth_service.dart';
+
+
+
+import 'package:wiz/utilitis/show_error_dialog.dart';
+
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -32,8 +39,8 @@ class _RegisterViewState extends State<RegisterView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.greenAccent,
-        title: const Text('WasteWiz',
+        backgroundColor: HexColor('#D2DE32'),
+        title: const Text('Register',
          style: TextStyle(
       fontSize: 30.0, // Font size of the title text
       fontWeight: FontWeight.bold, // Font weight of the title text
@@ -47,9 +54,7 @@ class _RegisterViewState extends State<RegisterView> {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: FutureBuilder(
-          future: Firebase.initializeApp(
-                  options: DefaultFirebaseOptions.currentPlatform,
-                 ),
+           future: AuthService.firebase().initialize(),
           builder: (context, snapshot) {
             return Column(
               mainAxisAlignment: MainAxisAlignment.center, // Center the children vertically
@@ -58,79 +63,131 @@ class _RegisterViewState extends State<RegisterView> {
              Image.asset(
                   'assets/images/dustbin.png',
                   width: 100, // Adjust width as needed
-                  height: 100, // Adjust height as needed
+                  height: 100,
+                   // Adjust height as needed
                 ),
-              TextField(
+                const SizedBox(height: 25),
+                Column(
+                  children: [
+                    Text(
+                      "Enter your email:",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                     TextField(
                 controller: _email,
                 keyboardType: TextInputType.emailAddress,
                 enableSuggestions: false,
                 autocorrect: false,
+                style: TextStyle(fontSize: 12),
                 decoration: const InputDecoration(
-                  hintText: "Email",
-        
+                  hintText: "Your Email",
+
                   border: OutlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.green,
+                      width: 0.1,
                     ),
                   ),
                 ),
-              ),
-               const SizedBox(height: 16), // Add some space between the email and password fields
+                     ),
+                  ],
+                ),
+             const SizedBox(height: 16),// Add some space between the email and password fields
+             Column(
+                  children: [
+                    Text(
+                      "Enter your password:",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
               TextField(
                 controller: _password,
                 obscureText: true,
                 enableSuggestions: false,
                 autocorrect: false,
+                style: TextStyle(fontSize: 12),
                 decoration: const InputDecoration(
-                  hintText: "Password",
-                
+                  hintText: "Your Password",
                 border: OutlineInputBorder(
                     borderSide: BorderSide(
                       color: Colors.green,
-        
-                    ),
-        
+           ),
                   ),
                 ),
-              ),
+                     ),
+                  ],
+                ),
               const SizedBox(height: 16), // Add some space below the password field
               ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color>(Colors.lightGreen),
-                  foregroundColor: MaterialStateProperty.all<Color> (Colors.black),
+                  backgroundColor: MaterialStateProperty.all<Color>(HexColor("#016A70")),
+                  foregroundColor: MaterialStateProperty.all<Color> (Colors.white),
+                  padding: MaterialStateProperty.all<EdgeInsetsGeometry>(EdgeInsets.symmetric(horizontal: 50, vertical:15 )),
+                    shape: MaterialStateProperty.all<RoundedRectangleBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10), // Button border radius
+                    )),
                   animationDuration: const Duration(milliseconds: 200)
                 ),
                 onPressed: () async {
                   final email=_email.text;
                   final password=_password.text;
+                  //
                 try{
-                 final userCrendential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                    email : email,
-                    password : password
+                  await  AuthService.firebase().createUser(
+                    email: email,
+                    password: password
                     );
-                  print(userCrendential);
-                } on FirebaseAuthException catch(e){
-                  if(e.code == 'weak-password'){
-                    print("weak password");
-                  } else if(e.code=='email-already-in-use'){
-                    print("Email already in use.");
-                  }else if (e.code=="invalid-email"){
-                    print("Invalid Email Address");
-                  }else{
-                    print(e.code);
-                  }
+                    AuthService.firebase().sendEmailVerification();
+                    Navigator.of(context).pushNamed(verifyRoute);
+                } on EmailAlreadyInUseAuthException{
+                  await showErrorDialog(
+                      context,
+                      'Email already in use',
+                      );
+                }
+                on WeakPasswordAuthException{
+                   await showErrorDialog(
+                      context,
+                      'Weak Password',
+                      );
+  
+                } on InvalidEmailAuthException{
+                   await showErrorDialog(
+                      context,
+                      'Invalid Email Address',
+                      );
+                }
+                on GenericAuthException{
+                  await showErrorDialog(
+                      context,
+                      'Failed to register',
+                      );
                 }
                 },
                 child: const Text('Register here!'),
                 ),
+                const SizedBox(height: 12),
+                 TextButton(
+                    onPressed: (){
+                      Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (route) => false);
+                    },
+                    child: const Text(
+                      "Already Registered? Click here to login!",
+                      style: TextStyle(color: Colors.black),
+                      ),
+                    )
             ],
           );
           }
-          
         ),
       ),
     )
     );
-    
   }
 }
