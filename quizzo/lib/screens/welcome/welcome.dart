@@ -13,14 +13,21 @@ class WelcomeScreen extends StatelessWidget {
     return Scaffold(
         body: Stack(
       children: [
-        WebsafeSvg.asset("assets/icons/bg.svg"),
+        SizedBox(
+          width: double.infinity,
+          height: double.infinity,
+          child: WebsafeSvg.asset("assets/icons/bg.svg", fit: BoxFit.cover),
+          // resizeBehaviour: ResizeBehaviour.scale,
+        ),
         SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: kDefaultPadding),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Spacer(flex: 2,),
+                Spacer(
+                  flex: 2,
+                ),
                 Text(
                   "Let's Take a Quiz!",
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
@@ -41,9 +48,10 @@ class WelcomeScreen extends StatelessWidget {
                 ),
                 // Spacer(),
                 SizedBox(
-                  height: 25.0,),
+                  height: 25.0,
+                ),
                 InkWell(
-                  onTap: ()=> Get.to(QuizScreen()),
+                  onTap: () => Get.to(QuizScreen()),
                   child: Container(
                     width: double.infinity,
                     alignment: Alignment.center,
@@ -65,7 +73,9 @@ class WelcomeScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-                Spacer(flex: 2,),
+                Spacer(
+                  flex: 2,
+                ),
               ],
             ),
           ),
